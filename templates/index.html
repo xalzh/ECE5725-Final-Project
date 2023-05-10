@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPi4 Camera Stream</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000;
+        }
+        h1 {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+        }
+        .button-container {
+            position: absolute;
+            right: 10%;
+            padding: 1em;
+        }
+        .button-container button {
+            display: block;
+            width: 150px;
+            height: 50px;
+            margin-bottom: 1em;
+            font-size: 1.2em;
+        }
+        #mode-display, #message-display {
+            position: absolute;
+            color: #fff;
+            font-size: 1.5em;
+            text-align: center;
+            width: 100%;
+        }
+        #mode-display {
+            top: 20%;  /* Adjust as needed */
+        }
+        #message-display {
+            bottom: 20%;  /* Adjust as needed */
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Raspberry Pi 4 Camera Stream</h1>
+    <img src="/video_feed" alt="Live Video Feed">
+    <div class="button-container" id="button-container">
+        <!-- Buttons will be dynamically added here based on the mode -->
+    </div>
+    <div class="button-container" id="rolling-button-container" style="left: 10%; right: auto;">
+        <button id="forward">Go Forward</button>
+        <button id="backward">Go Backward</button>
+        <button id="right">Turn Right</button>
+        <button id="left">Turn Left</button>
+    </div>    
+    <p id="mode-display"></p>
+    <p id="message-display"></p>
+    <script>
+        var mode = 1;
+
+        function displayMode() {
+            $('#mode-display').text('Current Mode: ' + mode);
+        }
+
+        function displayMessage(message) {
+            var messageDisplay = $('#message-display');
+            messageDisplay.text(message);
+            setTimeout(function() {
+                messageDisplay.text('');  // Clear the message after 2 seconds
+            }, 2000);
+        }
+
+        function sendSignal(buttonId) {
+            $.ajax({
+                url: '/button_click',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 'button_id': buttonId }),
+                success: function(response) {
+                    console.log(response);
+                    displayMessage('Button "' + buttonId + '" clicked');
+                }
+            });
+        }
+
+        function changeMode() {
+            mode = mode % 3 + 1;  // Change the mode from 1 to 2, 2 to 3, 3 to 1
+            updateButtons();
+            displayMode();
+            $.ajax({
+                url: '/change_mode',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 'mode': mode }),
+                success: function(response) {
+                    console.log(response);
+                }
+            });
+        }
+
+        function updateButtons() {
+            var buttonContainer = $('#button-container');
+            buttonContainer.empty();  // Remove all current buttons
+
+            // Add buttons based on the mode
+            if (mode == 1) {
+                buttonContainer.append('<button id="change-mode">Change Mode</button>');
+                buttonContainer.append('<button id="exit">Exit</button>');
+            } else if (mode == 2) {
+                buttonContainer.append('<button id="change-mode">Change Mode</button>');
+                buttonContainer.append('<button id="pause-tracking">Pause Tracking</button>');
+                buttonContainer.append('<button id="cancel-tracking">Cancel Tracking</button>');
+                buttonContainer.append('<button id="exit">Exit</button>');
+            } else if (mode == 3) {
+                buttonContainer.append('<button id="change-mode">Change Mode</button>');
+                buttonContainer.append('<button id="start-stabilization">Start Stabilization</button>');
+                buttonContainer.append('<button id="exit">Exit</button>');
+            }
+
+            // Add click event listeners to the new buttons
+            buttonContainer.children('button').click(function() {
+                var buttonId = this.id;
+                if (buttonId == 'change-mode') {
+                    changeMode();
+                } else {
+                    sendSignal(buttonId);
+                }
+            });
+        }
+
+        function rollingControl(buttonId, action) {
+            var url = (action === 'down') ? '/control_rolling' : '/exit_rolling';
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ 'rolling_direction': buttonId }),
+                success: function(response) {
+                    console.log(response);
+                    var mes = (action === 'down') ? 'Car is rolling ' + buttonId : 'Car stops rolling';
+                    displayMessage(mes);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            displayMode();  // Display the initial mode when the page loads
+            updateButtons();  // Update the buttons when the page loads
+
+            $('#rolling-button-container').children('button').mousedown(function() {
+                rollingControl(this.id, 'down');
+            }).mouseup(function() {
+                rollingControl(this.id, 'up');
+            });
+
+        });
+    </script>
+</body>
+</html>
+
+               
