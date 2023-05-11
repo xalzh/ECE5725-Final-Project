@@ -1,4 +1,5 @@
-"""5/11/2023 by Zehao Li
+"""
+5/11/2023 by Zehao Li
 
 This is a Raspberry Pi-based application for controlling a two-axis camera rig. The
 application provides three modes of operation:
