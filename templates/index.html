@@ -65,9 +65,11 @@
     <p id="message-display"></p>
     <script>
         var mode = 1;
+        var modeNames = ["No Mode", "Manual", "Object Tracking", "Stablization"]
+        var previousMode = mode;
 
         function displayMode() {
-            $('#mode-display').text('Current Mode: ' + mode);
+            $('#mode-display').text('Current Mode: ' + modeNames[mode]);
         }
 
         function displayMessage(message) {
@@ -122,7 +124,9 @@
             } else if (mode == 3) {
                 buttonContainer.append('<button id="change-mode">Change Mode</button>');
                 buttonContainer.append('<button id="start-stabilization">Start Stabilization</button>');
+                buttonContainer.append('<button id="cancel-stabilization">Cancel Stabilization</button>');
                 buttonContainer.append('<button id="exit">Exit</button>');
+
             }
 
             // Add click event listeners to the new buttons
@@ -151,16 +155,72 @@
             });
         }
 
+        function updateMode() {
+            $.getJSON('/get_current_mode', function(data) {
+                // data is the dictionary {'mode': mode} from the server
+                console.log(data);
+                // Update your mode based on data
+                mode = data['mode'];
+                displayMode();
+
+                // Check if the mode has changed
+                if (mode != previousMode) {
+                    // If the mode has changed, update the buttons
+                    updateButtons();
+                    previousMode = mode;
+                }
+            });
+        }
+
         $(document).ready(function() {
             displayMode();  // Display the initial mode when the page loads
             updateButtons();  // Update the buttons when the page loads
-
+            setInterval(updateMode, 1000);  // Update mode every second
             $('#rolling-button-container').children('button').mousedown(function() {
                 rollingControl(this.id, 'down');
             }).mouseup(function() {
                 rollingControl(this.id, 'up');
             });
 
+            $(document).keydown(function(e) {
+                var direction = null;
+                switch(e.which) {
+                    case 37: // left arrow
+                        direction = 'left';
+                        break;
+                    case 38: // up arrow
+                        direction = 'forward';
+                        break;
+                    case 39: // right arrow
+                        direction = 'right';
+                        break;
+                    case 40: // down arrow
+                        direction = 'backward';
+                        break;
+                    default: return; // exit this handler for other keys
+                }
+                e.preventDefault(); // prevent the default action (scroll / move caret)
+                rollingControl(direction, 'down');
+            }).keyup(function(e) {
+                var direction = null;
+                switch(e.which) {
+                    case 37: // left arrow
+                        direction = 'left';
+                        break;
+                    case 38: // up arrow
+                        direction = 'forward';
+                        break;
+                    case 39: // right arrow
+                        direction = 'right';
+                        break;
+                    case 40: // down arrow
+                        direction = 'backward';
+                        break;
+                    default: return; // exit this handler for other keys
+                }
+                e.preventDefault(); // prevent the default action (scroll / move caret)
+                rollingControl(direction, 'up');
+            });
         });
     </script>
 </body>

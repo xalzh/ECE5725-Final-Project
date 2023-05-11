@@ -8,13 +8,13 @@ from rolling_control import Rolling_Control
 app = Flask(__name__)
 q = Queue()
 mode = 1
-shared_data = {'mode':1, 'button_22': False, 'button_23': False, 'button_27': False}
 
 rolling = Rolling_Control()
 
 def gen_frames():  
     global shared_data
     while True:
+        #print(shared_data)
         if not q.empty():  # Check if the queue is not empty
             frame = q.get()  # Get the next frame from the queue
             yield (b'--frame\r\n'
@@ -35,16 +35,27 @@ def button_click():
     button_id = request.json['button_id']
     print(f'Button "{button_id}" clicked')
     # set shared_data
-    shared_data['button_id'] = button_id
+    shared_data['functional'] = button_id
     return 'Button click handled'
 
 @app.route('/change_mode', methods=['POST'])
 def change_mode():
-    global mode
+    global mode, shared_data
+    shared_data['mode_change_signal'] = True
+    shared_data['mode_idx'] += 1
+    max_mode_num = 3
+    if shared_data['mode_idx'] >= max_mode_num:
+        shared_data['mode_idx'] = 0
     mode = request.json['mode']
     print(f'Mode changed to {mode}')  # Handle the mode change in your main program
     return 'Mode change handled'
 
+@app.route('/get_current_mode')
+def get_current_mode():
+    global shared_data, mode
+    mode = shared_data['mode_idx'] + 1
+    return json.dumps({'mode': shared_data['mode_idx']+1})
+    
 @app.route('/control_rolling', methods=['POST'])
 def control_rolling():
     rolling_direction = request.json['rolling_direction']

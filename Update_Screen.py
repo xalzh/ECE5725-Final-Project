@@ -37,7 +37,7 @@ class Screen():
                 rotation_matrix = cv2.getRotationMatrix2D((320, 240), -roll_error, 1)  # Subtract roll_error instead of adding it
                 rotated_frame = cv2.warpAffine(frame, rotation_matrix, (640, 480))
                 cropped_frame = rotated_frame[120:380, 100:500]
-                self.frame = frame
+                self.frame = cropped_frame
                 frame = cv2.resize(cropped_frame, (320, 240), interpolation=cv2.INTER_NEAREST)
                 # Convert the color format from BGR to RGB for display with Pygame
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert to RGB format for Pygame

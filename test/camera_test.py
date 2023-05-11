@@ -1,33 +1,30 @@
+import os
 import cv2
 
-def main():
-    # Open the default camera (usually the first one connected)
-    cap = cv2.VideoCapture(0)
+os.environ["SDL_VIDEODRIVER"] = "fbcon"
+os.putenv('SDL_FBDEV', '/dev/fb0')  #
+os.putenv('SDL_MOUSEDRV', 'TSLIB')  # Track mouse clicks on piTFT
+os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 
-    # Check if the camera was opened successfully
-    if not cap.isOpened():
-        print("Error: Could not open camera")
-        return
 
-    while True:
-        # Capture frame-by-frame
-        ret, frame = cap.read()
+# Use the 0th camera attached to the system
+cap = cv2.VideoCapture(0)
 
-        # Check if the frame was captured correctly
-        if not ret:
-            print("Error: Could not read frame from camera")
-            break
+# Set the resolution
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-        # Display the resulting frame
-        cv2.imshow('Camera Feed', frame)
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
 
-        # Exit the loop if 'q' key is pressed
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    # Display the resulting frame
+    cv2.imshow('Camera Feed', frame)
 
-    # Release the camera and close all windows
-    cap.release()
-    cv2.destroyAllWindows()
+    # Wait for 1 millisecond, break the loop if 'q' is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-if __name__ == "__main__":
-    main()
+# When everything done, release the capture and destroy the window
+cap.release()
+cv2.destroyAllWindows()
