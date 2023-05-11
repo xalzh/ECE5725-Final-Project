@@ -10,7 +10,6 @@ import pygame
 from pygame.locals import *
 
 
-
 class MOSSE():
     def __init__(self):
         self.initial_roi_frame = None
@@ -26,9 +25,8 @@ class MOSSE():
 
     def save_initial_roi_frame(self, frame):
         if len(self.roi) == 2:
-            self.initial_roi_frame = frame.copy() # Save the original frame
+            self.initial_roi_frame = frame.copy()  # Save the original frame
             self.initial_roi = frame[self.roi[0][1]:self.roi[1][1], self.roi[0][0]:self.roi[1][0]]
-
 
     def handle_touch_event(self, event):
         if event.type == MOUSEBUTTONDOWN:
@@ -36,17 +34,17 @@ class MOSSE():
             if not self.drawing:
                 # Reset selected_roi flag when starting to draw a new ROI
                 self.selected_roi = False
-                self.roi = [(pos[0]*2, pos[1]*2)]
+                self.roi = [(pos[0] * 2, pos[1] * 2)]
                 self.drawing = True
         elif event.type == MOUSEMOTION:
             if self.drawing:
                 pos = pygame.mouse.get_pos()
-                self.roi[1:] = [(pos[0]*2, pos[1]*2)]
+                self.roi[1:] = [(pos[0] * 2, pos[1] * 2)]
         elif event.type == MOUSEBUTTONUP:
             pos = pygame.mouse.get_pos()
-            self.roi.append((pos[0]*2, pos[1]*2))
+            self.roi.append((pos[0] * 2, pos[1] * 2))
             self.drawing = False
-            
+
             # Calculate the width and height of the selected ROI
             roi_width = abs(self.roi[1][0] - self.roi[0][0])
             roi_height = abs(self.roi[1][1] - self.roi[0][1])
@@ -59,8 +57,8 @@ class MOSSE():
             else:
                 self.selected_roi = True
                 self.finger_touch = False
-                self.roi = [(min([self.roi[0][0],self.roi[1][0]]), min([self.roi[0][1],self.roi[1][1]])),((max([self.roi[0][0],self.roi[1][0]]), max([self.roi[0][1],self.roi[1][1]])))]
-
+                self.roi = [(min([self.roi[0][0], self.roi[1][0]]), min([self.roi[0][1], self.roi[1][1]])),
+                            ((max([self.roi[0][0], self.roi[1][0]]), max([self.roi[0][1], self.roi[1][1]])))]
 
     def run(self, frame):
         roi = self.roi
@@ -85,7 +83,7 @@ class MOSSE():
                     self.roi = []
                     self.selected_roi = False
                     return frame, None, False, False
- 
+
                 self.tracker = cv2.legacy.TrackerMOSSE_create()
                 bbox = (roi[0][0], roi[0][1], roi_width, roi_height)
                 self.tracker.init(frame, bbox)
