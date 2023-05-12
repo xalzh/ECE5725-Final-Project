@@ -41,17 +41,17 @@
             width: 100%;
         }
         #mode-display {
-            top: 20%;  /* Adjust as needed */
+            top: 10%;  /* Adjust as needed */
         }
         #message-display {
-            bottom: 20%;  /* Adjust as needed */
+            bottom: 10%;  /* Adjust as needed */
         }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
     <h1>Raspberry Pi 4 Camera Stream</h1>
-    <img src="/video_feed" alt="Live Video Feed">
+    <img id="video" src="/video_feed" alt="Live Video Feed">
     <div class="button-container" id="button-container">
         <!-- Buttons will be dynamically added here based on the mode -->
     </div>
@@ -61,12 +61,54 @@
         <button id="right">Turn Right</button>
         <button id="left">Turn Left</button>
     </div>    
-    <p id="mode-display"></p>
+    <p id="mode-display" ></p>
     <p id="message-display"></p>
     <script>
         var mode = 1;
-        var modeNames = ["No Mode", "Manual", "Object Tracking", "Stablization"]
-        var previousMode = mode;
+        var trackingStatus = true;
+        var button22 = false;
+        var button23 = false;
+        var button27 = false;
+        var previous_data = [mode, trackingStatus, button22, button23, button27]
+        var modeNames = ["No Mode", "Manual", "Object Tracking", "Stablization"];
+        var startX, startY, endX, endY;
+        var clickCount = 0;
+        var coordinates = [null, null];
+
+        function clickHandler(e) {
+            var rect = this.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            var y = e.clientY - rect.top;
+
+            if (mode == 1) {
+                // Send the coordinates to the server if in manual mode
+                $.ajax({
+                    url: '/set_manual_coordinates',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ 'coordinates': {x: x, y: y} }),
+                    success: function(response) {
+                        console.log(response);
+                    }
+                });
+            } else if (mode == 2 && clickCount < 2) {
+                coordinates[clickCount] = {x: x, y: y};
+                clickCount++;
+                if (clickCount == 2) {
+                    $.ajax({
+                        url: '/set_coordinates',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ 'coordinates': coordinates }),
+                        success: function(response) {
+                            console.log(response);
+                        }
+                    });
+                }
+            }
+        }
+
+        $('#video').click(clickHandler);
 
         function displayMode() {
             $('#mode-display').text('Current Mode: ' + modeNames[mode]);
@@ -81,6 +123,15 @@
         }
 
         function sendSignal(buttonId) {
+            // Clear the coordinate variables if the 'cancel-tracking' button is clicked
+            if (buttonId == 'cancel-tracking') {
+                startX = undefined;
+                startY = undefined;
+                endX = undefined;
+                endY = undefined;
+                clickCount = 0;
+            }
+
             $.ajax({
                 url: '/button_click',
                 type: 'POST',
@@ -88,15 +139,19 @@
                 data: JSON.stringify({ 'button_id': buttonId }),
                 success: function(response) {
                     console.log(response);
-                    displayMessage('Button "' + buttonId + '" clicked');
                 }
             });
         }
 
         function changeMode() {
             mode = mode % 3 + 1;  // Change the mode from 1 to 2, 2 to 3, 3 to 1
-            updateButtons();
-            displayMode();
+
+            // Clear the coordinate variables when the mode changes
+            startX = undefined;
+            startY = undefined;
+            endX = undefined;
+            endY = undefined;
+
             $.ajax({
                 url: '/change_mode',
                 type: 'POST',
@@ -108,6 +163,7 @@
             });
         }
 
+
         function updateButtons() {
             var buttonContainer = $('#button-container');
             buttonContainer.empty();  // Remove all current buttons
@@ -118,7 +174,11 @@
                 buttonContainer.append('<button id="exit">Exit</button>');
             } else if (mode == 2) {
                 buttonContainer.append('<button id="change-mode">Change Mode</button>');
-                buttonContainer.append('<button id="pause-tracking">Pause Tracking</button>');
+                if (trackingStatus === true) {
+                    buttonContainer.append('<button id="pause-tracking">Pause Tracking</button>');
+                } else {
+                    buttonContainer.append('<button id="pause-tracking">Resume Tracking</button>');
+                }
                 buttonContainer.append('<button id="cancel-tracking">Cancel Tracking</button>');
                 buttonContainer.append('<button id="exit">Exit</button>');
             } else if (mode == 3) {
@@ -161,13 +221,44 @@
                 console.log(data);
                 // Update your mode based on data
                 mode = data['mode'];
-                displayMode();
-
-                // Check if the mode has changed
-                if (mode != previousMode) {
-                    // If the mode has changed, update the buttons
+                trackingStatus = data['tracking_status'];
+                button22 = data['button22'];
+                button23 = data['button23'];
+                button27 = data['button27'];
+                if (mode === 2 && trackingStatus === true && button22 === true ) {
+                    mes = 'Resume tracking';
+                    displayMessage(mes);
+                }
+                if (mode === 2 && trackingStatus === false && button22 === true ) {
+                    mes = 'Pause tracking';
+                    displayMessage(mes);
+                }
+                if (mode === 2 && button23 === true ) {
+                    startX = undefined;
+                    startY = undefined;
+                    endX = undefined;
+                    endY = undefined;
+                    clickCount = 0;
+                    mes = 'Cancel tracking';
+                    displayMessage(mes);
+                }
+                if (mode === 3 && button22 === true ) {
+                    mes = 'Start stablization';
+                    displayMessage(mes);
+                }
+                if (mode === 3 && button23 === true ) {
+                    mes = 'Cancel stablization';
+                    displayMessage(mes);
+                }
+                if (button27 === true ) {
+                    mes = 'Program will exit';
+                    displayMessage(mes);
+                }
+                var current_data = [mode, trackingStatus, button22, button23, button27]
+                if (!(current_data.every((value, index) => value === previous_data[index]))) {
+                    previous_data = current_data;
+                    displayMode();
                     updateButtons();
-                    previousMode = mode;
                 }
             });
         }
@@ -175,7 +266,7 @@
         $(document).ready(function() {
             displayMode();  // Display the initial mode when the page loads
             updateButtons();  // Update the buttons when the page loads
-            setInterval(updateMode, 1000);  // Update mode every second
+            setInterval(updateMode, 200);  // Update mode every second
             $('#rolling-button-container').children('button').mousedown(function() {
                 rollingControl(this.id, 'down');
             }).mouseup(function() {
@@ -225,5 +316,3 @@
     </script>
 </body>
 </html>
-
-               
