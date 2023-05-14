@@ -9,7 +9,8 @@ class Rolling_Control():
     INB2 = 16
     PWM = 19
 
-    ducty_cycle = 30
+    ducty_cycle1 = 50
+    ducty_cycle2 = 30
     frequency = 50
 
     def __init__(self):
@@ -41,25 +42,25 @@ class Rolling_Control():
         GPIO.output(self.INA2, GPIO.LOW)
         GPIO.output(self.INB1, GPIO.LOW)
         GPIO.output(self.INB2, GPIO.HIGH)
-        self.pwm.start(self.ducty_cycle)
+        self.pwm.start(self.ducty_cycle1)
 
     def rolling_backward(self):
         GPIO.output(self.INA1, GPIO.LOW)
         GPIO.output(self.INA2, GPIO.HIGH)
         GPIO.output(self.INB1, GPIO.HIGH)
         GPIO.output(self.INB2, GPIO.LOW)
-        self.pwm.start(self.ducty_cycle)
+        self.pwm.start(self.ducty_cycle1)
 
     def rolling_right(self):
         GPIO.output(self.INA1, GPIO.LOW)
         GPIO.output(self.INA2, GPIO.LOW)
         GPIO.output(self.INB1, GPIO.LOW)
         GPIO.output(self.INB2, GPIO.HIGH)
-        self.pwm.start(self.ducty_cycle)
+        self.pwm.start(self.ducty_cycle2)
 
     def rolling_left(self):
         GPIO.output(self.INA1, GPIO.HIGH)
         GPIO.output(self.INA2, GPIO.LOW)
         GPIO.output(self.INB1, GPIO.LOW)
         GPIO.output(self.INB2, GPIO.LOW)
-        self.pwm.start(self.ducty_cycle)
+        self.pwm.start(self.ducty_cycle2)

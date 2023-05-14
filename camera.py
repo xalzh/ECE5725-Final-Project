@@ -82,7 +82,7 @@ class Camera(threading.Thread):
                 self.screen.update_from_camera(frame, self.roll_error)
 
             # Add a small sleep interval to reduce CPU usage
-            time.sleep(0.01)
+            time.sleep(0.02)
 
         # Set the ready event when the thread finishes executing
         self.ready_event.set() 

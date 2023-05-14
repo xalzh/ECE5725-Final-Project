@@ -15,7 +15,7 @@ class pid():
         self.tuning_factor = 0.1
 
     def update(self, error, dt):
-        if abs(error) <= 10:
+        if abs(error) <= 20:
             return 0
         delta_error = (error - self.previous_error) / dt
         self.integral += error * dt

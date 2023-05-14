@@ -1,4 +1,5 @@
 from multiprocessing import Process, Queue, Value, Lock, Array, Manager
+import subprocess
 import threading
 import web
 from IMU import bno055
@@ -87,13 +88,19 @@ def main():
     imu = bno055()
 
     # Set up PID controllers for horizontal and vertical motors
+    #pid_hori_mode2 = pid(Kp=9, Ki=2.5, Kd=0.3, setpoint=320)
+    #pid_vert_mode2 = pid(Kp=7, Ki=3, Kd=0.1, setpoint=240)
     pid_hori_mode2 = pid(Kp=6, Ki=1, Kd=0.3, setpoint=320)
-    pid_vert_mode2 = pid(Kp=5, Ki=1.5, Kd=0.5, setpoint=240)
+    pid_vert_mode2 = pid(Kp=5, Ki=2, Kd=0.3, setpoint=240)
+    #pid_hori_mode2 = pid(Kp=10, Ki=2, Kd=0.2, setpoint=320)
+    #pid_vert_mode2 = pid(Kp=9, Ki=3, Kd=0, setpoint=240)
 
     # preset the flags for the mode and push buttons
     stabilize = False
     tracking_status = True
     shared_data['tracking_status'] = tracking_status
+    shared_data['tracking_initialized'] = False
+    shared_data['tracking_paused'] = False
     exit_signal = False # if button 27 is pressed, it will become True
 
     init_heading = 0
@@ -138,16 +145,16 @@ def main():
                 ui.mode1(pin_hori, pin_vert, shared_data)
                 shared_data['manual_coor'] = None
             elif shared_data['mode_idx'] == 1: # Object Tracking
-                if camera.selected_roi:
-                    ui.mode2(camera, pid_hori_mode2, pid_vert_mode2, pin_hori, pin_vert)
                 if shared_data['coordinates'][0] is not None and shared_data['coordinates'][1] is not None:
                     x1 = shared_data['coordinates'][0]['x']
                     y1 = shared_data['coordinates'][0]['y']
                     x2 = shared_data['coordinates'][1]['x']
                     y2 = shared_data['coordinates'][1]['y']
                     camera.mosse.selected_roi = True
-                    camera.mosse.roi =[(min([x1,x2]), min([y1,y2])),(max([x1,x2]), max([y1,y2]))]
-
+                    camera.mosse.roi = [(min([x1,x2]), min([y1,y2])),(max([x1,x2]), max([y1,y2]))]
+                    shared_data['coordinates'] = [None, None]  # reset the coordinates in shared_data
+                if camera.selected_roi:
+                    ui.mode2(camera, pid_hori_mode2, pid_vert_mode2, pin_hori, pin_vert)
             elif shared_data['mode_idx'] == 2: # Stabilization
                 if stabilize:
                     if ui.init_heading is None or ui.init_pitch is None or ui.init_roll is None:
@@ -190,6 +197,7 @@ if __name__ == "__main__":
     pi.hardware_PWM(pin_hori, f, 75500)
     pi.hardware_PWM(pin_vert, f, 70000)
 
+    subprocess.call(["python", "reset.py"]) # release all processes that take camera0
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)

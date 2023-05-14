@@ -36,6 +36,11 @@ def button_click():
         print(f'Button "{button_id}" clicked')
         if button_id == 'cancel-tracking':
             shared_data['coordinates'] = [None, None]
+            shared_data['tracking_initialized'] = False  # reset the flag
+        elif button_id == 'pause-tracking':
+            shared_data['tracking_paused'] = True  # pause the tracking
+        elif button_id == 'resume-tracking':
+            shared_data['tracking_paused'] = False  # resume the tracking
         shared_data['functional'] = button_id
         return 'Button click handled'
 
@@ -62,7 +67,10 @@ def get_current_mode():
     global shared_data, mode, lock
     with lock:
         mode = shared_data['mode_idx'] + 1
-        tracking_status = shared_data['tracking_status']
+        if shared_data.get('tracking_status'):
+            tracking_status = shared_data['tracking_status']
+        else:
+            tracking_status = False
         button22 = shared_data['22']
         button23 = shared_data['23']
         button27 = shared_data['27']
@@ -104,6 +112,7 @@ def set_coordinates():
         coordinates = request.json['coordinates']
         print(f'Coordinates received: {coordinates}')
         shared_data['coordinates'] = coordinates
+        shared_data['tracking_initialized'] = False  # reset the flag
         return 'Coordinates set'
 
 @app.route('/set_manual_coordinates', methods=['POST'])
