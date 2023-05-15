@@ -5,15 +5,16 @@ This program is designed to control a remote device, likely a drone or a robot, 
 OpenCV for video processing. It offers four modes of operation:
 
 1. Manual Mode: This mode lets the user manually control the movement of the device using mouse input.
-2. Auto Mode with Image ROI: This mode uses image processing to identify and track a region of interest (ROI). It
+2. Object Tracking Mode: This mode uses image processing to identify and track a region of interest (ROI). It
 automatically adjusts the device's movements to keep the ROI in focus.
-3. Auto Mode with IMU Data: This mode uses data from an Inertial Measurement Unit (IMU) to control the device's
-movements. It uses a PID controller to minimize the error in the device's orientation.
+3. Stabilization Mode with IMU Data: This mode uses data from an Inertial Measurement Unit (IMU) to control the
+device's movements. It uses a PID controller to minimize the error in the device's orientation.
 4. Video Recording Mode(decide not to implement): This mode allows the user to record video from the device's camera.
 The recorded video can be saved and viewed later.
 
 The program uses the pigpio library to interface with the device's hardware and control the Pulse Width Modulation (
-PWM) signals, which are used to control the device's motors. """
+PWM) signals, which are used to control the device's motors.
+"""
 import pygame
 from pygame.locals import *
 

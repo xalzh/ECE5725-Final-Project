@@ -1,9 +1,9 @@
 """
 4/16/2023 by Zehao Li
 
-This class implements the MOSSE algorithm and opens a window for the user to select a Region
-of Interest (ROI). Once an ROI is selected, the algorithm tracks the ROI using the MOSSE tracker and returns the
-coordinates of the tracked box.
+This class implements the MOSSE algorithm and opens a window for the user to select a Region of Interest (ROI). Once
+an ROI is selected, the algorithm tracks the ROI using the MOSSE tracker and returns the coordinates of the tracked
+box.
 
 Functions:
 - save_initial_roi_frame(frame): Saves the initial region of interest (ROI) frame and ROI.

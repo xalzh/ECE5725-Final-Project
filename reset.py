@@ -1,6 +1,4 @@
 import subprocess
-import re
-import cv2
 
 try:
     # Execute the lsof command and get the output

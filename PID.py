@@ -1,11 +1,15 @@
 """
 5/11/2023 by Zehao Li
 
-This code defines a PID (Proportional-Integral-Derivative) controller implemented as a Python class. The PID controller is used for feedback control systems to regulate a process based on the error between the desired setpoint and the measured value.
+This code defines a PID (Proportional-Integral-Derivative) controller implemented as a Python class. The PID
+controller is used for feedback control systems to regulate a process based on the error between the desired setpoint
+and the measured value.
 
 Functions:
-- __init__(self, Kp, Ki, Kd, setpoint, output_limits=(-1e10, 1e10)): Initializes the PID controller with the specified gains, setpoint, and output limits.
-- update(self, error, dt): Updates the PID controller with the current error and time difference, and computes the control output.
+- __init__(self, Kp, Ki, Kd, setpoint, output_limits=(-1e10, 1e10)): Initializes the PID controller with the
+specified gains, setpoint, and output limits.
+- update(self, error, dt): Updates the PID controller with the current error and time difference, and computes the
+control output.
 
 Attributes:
 - Kp: Proportional gain parameter of the PID controller.

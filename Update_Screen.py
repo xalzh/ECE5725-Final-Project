@@ -3,7 +3,7 @@
 
 This script defines the Screen class for a Pygame-based graphical user interface. The main function of this class is
 to display video feed from a camera and overlay it with text messages. The display is set up to work specifically on
-a Raspberry Pi device with a TFT touchscreen. The video feed can be processed for errors and adjusted for display
+a Raspberry Pi device with a PiTFT touchscreen. The video feed can be processed for errors and adjusted for display
 requirements. The class also handles user interactions with the touchscreen.
 """
 import cv2
